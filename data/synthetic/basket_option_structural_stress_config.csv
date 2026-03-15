@@ -1,0 +1,10 @@
+,value
+rho_constant,0.35
+rho_calm,0.2
+rho_stress,0.98
+stress_share_target,0.4
+true_world_paths,120.0
+delta_mc_paths,1200.0
+initial_price_mc_paths,12000.0
+bump_fraction,0.01
+repeat_count,3.0
