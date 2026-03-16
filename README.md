@@ -26,44 +26,44 @@ The real-data semiconductor extension shows a similar theme:
 
 The main synthetic workflow is:
 
-1. [01_setup_and_pricing.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/01_setup_and_pricing.ipynb)
+1. [01_setup_and_pricing.ipynb](notebooks/01_setup_and_pricing.ipynb)
    - builds the baseline synthetic market
    - simulates constant and regime-switching paths
    - prices the basket option
    - reports convergence and correlation diagnostics
 
-2. [02_delta_hedging_backtest.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/02_delta_hedging_backtest.ipynb)
+2. [02_delta_hedging_backtest.ipynb](notebooks/02_delta_hedging_backtest.ipynb)
    - runs the baseline hedging experiment from scratch
    - compares unhedged, constant-correlation hedge, and regime-switching hedge
    - uses a common premium basis for clean constant-vs-regime comparison
 
-3. [03_stress_sensitivity.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/03_stress_sensitivity.ipynb)
+3. [03_stress_sensitivity.ipynb](notebooks/03_stress_sensitivity.ipynb)
    - stress benchmark matrix
    - structural stress scenarios
    - sensitivity to harsher dependence environments
 
-4. [04_dimension_and_robustness.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/04_dimension_and_robustness.ipynb)
+4. [04_dimension_and_robustness.ipynb](notebooks/04_dimension_and_robustness.ipynb)
    - homogeneous dimension scaling
    - fixed-`N=10` robustness analysis
    - parameter sweeps for stress severity, stress share, moneyness, and related inputs
 
-Synthetic outputs are written to [data/synthetic_consolidated](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated).
+Synthetic outputs are written to [data/synthetic_consolidated](data/synthetic_consolidated).
 
 ### Real-Data Extension
 
-The real-data branch is under [real_simulation](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation):
+The real-data branch is under [real_simulation](real_simulation):
 
-1. [01_real_data_setup_and_calibration.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb)
+1. [01_real_data_setup_and_calibration.ipynb](real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb)
    - downloads semiconductor stock data
    - estimates vols, constant correlation, calm/stress correlation matrices, and regime transitions
 
-2. [02_real_data_basket_option_pricing.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/02_real_data_basket_option_pricing.ipynb)
+2. [02_real_data_basket_option_pricing.ipynb](real_simulation/notebooks/02_real_data_basket_option_pricing.ipynb)
    - prices a hypothetical basket call using the calibrated inputs
 
-3. [03_real_data_delta_hedging.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/03_real_data_delta_hedging.ipynb)
+3. [03_real_data_delta_hedging.ipynb](real_simulation/notebooks/03_real_data_delta_hedging.ipynb)
    - runs the simulated hedging comparison on the calibrated semiconductor basket
 
-Real-data outputs are written to [real_simulation/data](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data).
+Real-data outputs are written to [real_simulation/data](real_simulation/data).
 
 ## Reproducibility
 
@@ -75,7 +75,7 @@ The repo is now set up so the notebooks can run from either:
 To reproduce locally:
 
 1. Use Python `3.10+`.
-2. Install dependencies from [requirements.txt](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/requirements.txt).
+2. Install dependencies from [requirements.txt](requirements.txt).
 3. Open the notebooks from inside the extracted repository folder.
 
 Example:
@@ -91,17 +91,17 @@ Notes:
 
 - The synthetic notebooks are fully self-contained once dependencies are installed.
 - The real-data pricing and hedging notebooks can run from the saved CSV artifacts already in the repo.
-- [01_real_data_setup_and_calibration.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb) downloads historical prices from Stooq, so rerunning that notebook requires internet access and may reflect updated source data.
+- [01_real_data_setup_and_calibration.ipynb](real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb) downloads historical prices from Stooq, so rerunning that notebook requires internet access and may reflect updated source data.
 
 ## Key Files
 
-- [synthetic_analysis_utils.py](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/scripts/synthetic_analysis_utils.py): shared synthetic simulation and hedging helpers
-- [baseline_pricing_summary.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/baseline_pricing_summary.csv): baseline synthetic price comparison
-- [baseline_hedging_summary_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/baseline_hedging_summary_clean.csv): baseline synthetic hedge summary on a common premium basis
-- [dimension_homogeneous_gap_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/dimension_homogeneous_gap_clean.csv): clean homogeneous-`N` gap table
-- [n10_parameter_gap_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/n10_parameter_gap_clean.csv): clean `N=10` robustness gap table
-- [calibration_summary.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data/calibration_summary.csv): real-data calibration summary
-- [real_basket_hedging_clean_gap.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data/real_basket_hedging_clean_gap.csv): real-data hedge comparison on a clean basis
+- [synthetic_analysis_utils.py](scripts/synthetic_analysis_utils.py): shared synthetic simulation and hedging helpers
+- [baseline_pricing_summary.csv](data/synthetic_consolidated/baseline_pricing_summary.csv): baseline synthetic price comparison
+- [baseline_hedging_summary_clean.csv](data/synthetic_consolidated/baseline_hedging_summary_clean.csv): baseline synthetic hedge summary on a common premium basis
+- [dimension_homogeneous_gap_clean.csv](data/synthetic_consolidated/dimension_homogeneous_gap_clean.csv): clean homogeneous-`N` gap table
+- [n10_parameter_gap_clean.csv](data/synthetic_consolidated/n10_parameter_gap_clean.csv): clean `N=10` robustness gap table
+- [calibration_summary.csv](real_simulation/data/calibration_summary.csv): real-data calibration summary
+- [real_basket_hedging_clean_gap.csv](real_simulation/data/real_basket_hedging_clean_gap.csv): real-data hedge comparison on a clean basis
 
 ## Notes
 
