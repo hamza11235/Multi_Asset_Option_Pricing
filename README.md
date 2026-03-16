@@ -65,6 +65,34 @@ The real-data branch is under [real_simulation](/Users/hamzaahmed/Multi-Asset%20
 
 Real-data outputs are written to [real_simulation/data](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data).
 
+## Reproducibility
+
+The repo is now set up so the notebooks can run from either:
+
+- a normal `git clone`
+- an extracted GitHub ZIP archive
+
+To reproduce locally:
+
+1. Use Python `3.10+`.
+2. Install dependencies from [requirements.txt](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/requirements.txt).
+3. Open the notebooks from inside the extracted repository folder.
+
+Example:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+jupyter notebook
+```
+
+Notes:
+
+- The synthetic notebooks are fully self-contained once dependencies are installed.
+- The real-data pricing and hedging notebooks can run from the saved CSV artifacts already in the repo.
+- [01_real_data_setup_and_calibration.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb) downloads historical prices from Stooq, so rerunning that notebook requires internet access and may reflect updated source data.
+
 ## Key Files
 
 - [synthetic_analysis_utils.py](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/scripts/synthetic_analysis_utils.py): shared synthetic simulation and hedging helpers
