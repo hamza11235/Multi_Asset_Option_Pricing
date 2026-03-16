@@ -383,9 +383,13 @@ def evaluate_hedger(
     base_seed: int,
     funding_price: float | None = None,
     oracle_regime: bool = True,
+    precomputed_initial: tuple[float, np.ndarray] | None = None,
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray]:
     time_start = time.perf_counter()
-    model_price, initial_delta = initial_hedge_from_model(hedge_model, pricing_inputs, base_seed)
+    if precomputed_initial is None:
+        model_price, initial_delta = initial_hedge_from_model(hedge_model, pricing_inputs, base_seed)
+    else:
+        model_price, initial_delta = precomputed_initial
     effective_funding_price = model_price if funding_price is None else funding_price
 
     terminal_payoff = basket_call_payoff(true_paths[:, -1, :], pricing_inputs["weights"], pricing_inputs["strike"])
