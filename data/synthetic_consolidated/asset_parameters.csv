@@ -1,0 +1,4 @@
+asset,spot,weight,annualized_volatility,dividend_yield
+Asset 1,100.0,0.4,0.2,0.0
+Asset 2,95.0,0.35,0.25,0.0
+Asset 3,110.0,0.25,0.22,0.0

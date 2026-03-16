@@ -1,100 +1,82 @@
 # Basket Option Pricing and Hedging Under Correlation Model Risk
 
-This project studies how correlation assumptions affect the pricing and hedging of a European basket option in a multi-asset Black-Scholes setting.
+This repo studies how correlation assumptions affect the pricing and hedging of a European basket call in a multi-asset Black-Scholes framework.
 
-The core idea is to compare:
+The project has two parts:
 
-- a baseline model with constant correlation,
-- an extended model with regime-switching correlation,
-- hedging performance when the true world has changing correlation but the hedger assumes a simpler constant-correlation model.
+- a cleaned synthetic analysis pipeline with four notebooks
+- a real-data extension using a semiconductor basket and hypothetical options
 
-## Project Goal
+## Main Conclusion
 
-The goal is to build a clean Monte Carlo framework for:
+The synthetic results support a cautious version of the original thesis:
 
-1. pricing a European basket call,
-2. estimating multi-asset deltas,
-3. running a discrete-time delta-hedging experiment,
-4. quantifying correlation model risk in both price and hedged P&L.
+- pricing differences between constant and regime-switching correlation are usually modest
+- hedging matters far more than the time-0 price difference
+- regime switching can improve hedge quality under harsher stress settings, but the effect is moderate and not universal once comparisons are put on a common premium basis
 
-## Instrument
+The real-data semiconductor extension shows a similar theme:
 
-We consider a basket of `N` equities with prices `S_1(t), ..., S_N(t)` and weights `w_1, ..., w_N`.
+- calm and stress correlations are empirically different
+- but a constant-correlation approximation can still be fairly competitive for a diversified basket
 
-The basket value is:
+## Repository Structure
 
-```math
-B(t) = \sum_{i=1}^N w_i S_i(t)
-```
+### Synthetic Analysis
 
-The main payoff is a European basket call:
+The main synthetic workflow is:
 
-```math
-\left(B(T) - K\right)^+ = \max\left(\sum_{i=1}^N w_i S_i(T) - K, 0\right)
-```
+1. [01_setup_and_pricing.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/01_setup_and_pricing.ipynb)
+   - builds the baseline synthetic market
+   - simulates constant and regime-switching paths
+   - prices the basket option
+   - reports convergence and correlation diagnostics
 
-## Models
+2. [02_delta_hedging_backtest.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/02_delta_hedging_backtest.ipynb)
+   - runs the baseline hedging experiment from scratch
+   - compares unhedged, constant-correlation hedge, and regime-switching hedge
+   - uses a common premium basis for clean constant-vs-regime comparison
 
-### 1. Constant-Correlation Multi-Asset Black-Scholes
+3. [03_stress_sensitivity.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/03_stress_sensitivity.ipynb)
+   - stress benchmark matrix
+   - structural stress scenarios
+   - sensitivity to harsher dependence environments
 
-Under the risk-neutral measure, each asset follows a geometric Brownian motion with constant volatility and correlated Brownian shocks. The basket option price is estimated by Monte Carlo simulation of the joint terminal distribution.
+4. [04_dimension_and_robustness.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/notebooks/04_dimension_and_robustness.ipynb)
+   - homogeneous dimension scaling
+   - fixed-`N=10` robustness analysis
+   - parameter sweeps for stress severity, stress share, moneyness, and related inputs
 
-### 2. Regime-Switching Correlation Model
+Synthetic outputs are written to [data/synthetic_consolidated](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated).
 
-To capture stress behavior, the project introduces two correlation regimes:
+### Real-Data Extension
 
-- calm regime: lower average correlation,
-- stress regime: higher average correlation.
+The real-data branch is under [real_simulation](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation):
 
-A two-state Markov chain drives switching between the regimes. Conditional on the current regime, shocks are simulated using the corresponding correlation matrix.
+1. [01_real_data_setup_and_calibration.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/01_real_data_setup_and_calibration.ipynb)
+   - downloads semiconductor stock data
+   - estimates vols, constant correlation, calm/stress correlation matrices, and regime transitions
 
-## Main Tasks
+2. [02_real_data_basket_option_pricing.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/02_real_data_basket_option_pricing.ipynb)
+   - prices a hypothetical basket call using the calibrated inputs
 
-- simulate correlated terminal asset prices under the constant-correlation model,
-- price the basket option via Monte Carlo,
-- report Monte Carlo error bars and convergence diagnostics,
-- estimate multi-asset deltas using bump-and-revalue finite differences with common random numbers,
-- simulate hedging paths under regime-switching correlation,
-- evaluate hedging error when the hedger uses a misspecified constant-correlation model,
-- summarize pricing sensitivity and hedging risk across model settings.
+3. [03_real_data_delta_hedging.ipynb](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/notebooks/03_real_data_delta_hedging.ipynb)
+   - runs the simulated hedging comparison on the calibrated semiconductor basket
 
-## Hedging Experiment
+Real-data outputs are written to [real_simulation/data](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data).
 
-The key hedging setup is:
+## Key Files
 
-- true world: regime-switching correlation model,
-- hedger model: constant-correlation model,
-- strategy: discrete-time delta hedge using the underlying assets and a cash account.
+- [synthetic_analysis_utils.py](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/scripts/synthetic_analysis_utils.py): shared synthetic simulation and hedging helpers
+- [baseline_pricing_summary.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/baseline_pricing_summary.csv): baseline synthetic price comparison
+- [baseline_hedging_summary_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/baseline_hedging_summary_clean.csv): baseline synthetic hedge summary on a common premium basis
+- [dimension_homogeneous_gap_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/dimension_homogeneous_gap_clean.csv): clean homogeneous-`N` gap table
+- [n10_parameter_gap_clean.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/data/synthetic_consolidated/n10_parameter_gap_clean.csv): clean `N=10` robustness gap table
+- [calibration_summary.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data/calibration_summary.csv): real-data calibration summary
+- [real_basket_hedging_clean_gap.csv](/Users/hamzaahmed/Multi-Asset%20Option%20Pricing/real_simulation/data/real_basket_hedging_clean_gap.csv): real-data hedge comparison on a clean basis
 
-The main output is the terminal hedged P&L distribution, with summary statistics such as:
+## Notes
 
-- mean,
-- standard deviation,
-- tail quantiles,
-- comparison of correctly specified vs misspecified hedging assumptions.
-
-## Planned Deliverables
-
-- a Jupyter notebook implementing pricing, delta estimation, and hedging simulation,
-- figures showing price sensitivity to correlation and regime parameters,
-- Monte Carlo convergence plots and confidence intervals,
-- hedged P&L comparisons under correct and misspecified models,
-- a short write-up discussing pricing impact, hedging implications, and practical limitations.
-
-## Possible Second Stage
-
-After validating the pipeline on synthetic data, the project may optionally use real equity return data to estimate:
-
-- historical volatilities,
-- historical correlations,
-- calm vs stress correlation regimes.
-
-This stage would be used for hypothetical basket option experiments rather than full market calibration.
-
-## Expected Outcome
-
-The expected result is that constant-correlation Black-Scholes provides a useful baseline, but correlation regime shifts can materially affect both option value and hedging error, especially in stress-like scenarios.
-
-## Status
-
-This repository is currently in the planning stage. The README is an initial summary and will be refined as the implementation develops.
+- The regime hedge in the synthetic notebooks is an oracle benchmark: it knows the current simulated regime at rebalance.
+- The cleaned synthetic analysis emphasizes dispersion and 5% tails more than 1% tails, because the latter are noisier with moderate Monte Carlo sample sizes.
+- The repo intentionally keeps one synthetic narrative and one real-data extension. Older exploratory branches and duplicate notebook paths were removed from the tracked repo.

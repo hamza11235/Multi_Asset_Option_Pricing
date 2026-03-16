@@ -1,0 +1,12 @@
+parameter,value
+rate,0.03
+maturity,1.0
+daily_steps,252.0
+paths,3000.0
+strike,100.75
+start_regime,0.0
+rho_constant,0.35
+rho_calm,0.2
+rho_stress,0.75
+p01_daily,0.03
+p10_daily,0.12

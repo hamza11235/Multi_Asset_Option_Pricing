@@ -1,0 +1,12 @@
+,value
+valuation_date,2026-03-13
+basket_notional,100.0
+basket_initial_value,100.0
+strike,100.0
+risk_free_rate,0.04
+maturity_years,1.0
+pricing_paths,20000
+regime_steps_per_year,12
+start_regime,calm
+p01_daily,0.0173210161662817
+p10_daily,0.0980392156862745

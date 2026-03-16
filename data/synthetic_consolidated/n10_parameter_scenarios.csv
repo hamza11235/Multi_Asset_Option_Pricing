@@ -1,0 +1,15 @@
+scenario_group,scenario_value,rho_stress,stress_share,lambda_daily,hedge_steps,strike_multiplier
+baseline,baseline,0.98,0.4,0.08,12,1.0
+stress_corr,0.75,0.75,0.4,0.08,12,1.0
+stress_corr,0.9,0.9,0.4,0.08,12,1.0
+stress_corr,0.98,0.98,0.4,0.08,12,1.0
+stress_share,0.2,0.98,0.2,0.08,12,1.0
+stress_share,0.3,0.98,0.3,0.08,12,1.0
+stress_share,0.4,0.98,0.4,0.08,12,1.0
+stress_share,0.5,0.98,0.5,0.08,12,1.0
+hedge_frequency,Monthly,0.98,0.4,0.08,12,1.0
+hedge_frequency,Quarterly,0.98,0.4,0.08,4,1.0
+hedge_frequency,Semiannual,0.98,0.4,0.08,2,1.0
+strike_multiplier,0.95,0.98,0.4,0.08,12,0.95
+strike_multiplier,1.0,0.98,0.4,0.08,12,1.0
+strike_multiplier,1.05,0.98,0.4,0.08,12,1.05

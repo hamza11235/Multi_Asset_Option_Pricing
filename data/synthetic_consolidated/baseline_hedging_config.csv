@@ -1,0 +1,7 @@
+parameter,value
+true_world_paths,300.0
+delta_mc_paths,2000.0
+initial_price_mc_paths,20000.0
+hedge_steps,12.0
+days_per_hedge_step,21.0
+bump_fraction,0.01
