@@ -1,3 +1,13 @@
+"""Shared synthetic pricing and hedging utilities.
+
+The final notebooks use this module as the single computational layer for:
+
+- simulating constant-correlation and regime-switching stock paths
+- pricing the basket option and estimating deltas
+- running self-financing hedge backtests
+- packaging the summary tables saved under ``outputs/synthetic``
+"""
+
 from __future__ import annotations
 
 import time
@@ -11,20 +21,24 @@ TRADING_DAYS_PER_YEAR = 252
 
 
 def basket_values(prices: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """Return basket levels for one or many price vectors."""
     return np.asarray(prices, dtype=float) @ np.asarray(weights, dtype=float)
 
 
 def basket_call_payoff(prices: np.ndarray, weights: np.ndarray, strike: float) -> np.ndarray:
+    """Return European basket-call payoffs at maturity."""
     return np.maximum(basket_values(prices, weights) - strike, 0.0)
 
 
 def equicorrelation_matrix(n_assets: int, rho: float) -> np.ndarray:
+    """Build an equicorrelation matrix with unit diagonal."""
     matrix = np.full((n_assets, n_assets), rho, dtype=float)
     np.fill_diagonal(matrix, 1.0)
     return matrix
 
 
 def build_transition_matrix(p01_daily: float, p10_daily: float) -> np.ndarray:
+    """Build the daily calm/stress transition matrix."""
     return np.array(
         [
             [1.0 - p01_daily, p01_daily],
@@ -35,12 +49,14 @@ def build_transition_matrix(p01_daily: float, p10_daily: float) -> np.ndarray:
 
 
 def average_off_diagonal(matrix: np.ndarray) -> float:
+    """Summarize a correlation matrix by its mean off-diagonal entry."""
     values = np.asarray(matrix, dtype=float)
     mask = ~np.eye(values.shape[0], dtype=bool)
     return float(values[mask].mean())
 
 
 def empirical_return_correlation(paths: np.ndarray) -> np.ndarray:
+    """Estimate the empirical return correlation from simulated paths."""
     log_returns = np.log(paths[:, 1:, :] / paths[:, :-1, :]).reshape(-1, paths.shape[-1])
     return np.corrcoef(log_returns, rowvar=False)
 
@@ -56,6 +72,7 @@ def simulate_constant_paths(
     corr: np.ndarray,
     seed: int,
 ) -> np.ndarray:
+    """Simulate multivariate GBM paths under a fixed correlation matrix."""
     rng = np.random.default_rng(seed)
     spot = np.asarray(spot, dtype=float)
     div_yield = np.asarray(div_yield, dtype=float)
@@ -89,6 +106,7 @@ def simulate_regime_switching_paths(
     start_regime: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Simulate GBM paths when correlation depends on a hidden calm/stress state."""
     rng = np.random.default_rng(seed)
     spot = np.asarray(spot, dtype=float)
     div_yield = np.asarray(div_yield, dtype=float)
@@ -122,6 +140,7 @@ def monte_carlo_price_summary(
     model_name: str,
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Package a Monte Carlo price estimate with basic uncertainty diagnostics."""
     n_paths = discounted_payoffs.size
     price = float(discounted_payoffs.mean())
     payoff_std = float(discounted_payoffs.std(ddof=1))
@@ -150,6 +169,7 @@ def constant_terminal_factors(
     n_samples: int,
     rng: np.random.Generator,
 ) -> np.ndarray:
+    """Draw terminal multiplicative factors under constant correlation."""
     if tau <= 0.0:
         return np.ones((n_samples, len(spot)))
     drift = (rate - div_yield - 0.5 * vol**2) * tau
@@ -163,6 +183,7 @@ def correlate_draws(
     regime_states: np.ndarray,
     chol_by_regime: dict[int, np.ndarray],
 ) -> np.ndarray:
+    """Apply the correct Cholesky factor path-by-path according to the regime."""
     correlated = np.empty_like(base_draws)
     for regime_value, chol in chol_by_regime.items():
         mask = regime_states == regime_value
@@ -176,6 +197,7 @@ def advance_regimes(
     transition_matrix: np.ndarray,
     rng: np.random.Generator,
 ) -> np.ndarray:
+    """Advance the calm/stress state one step for each path."""
     prob_to_stress = transition_matrix[current_regimes, 1]
     draws = rng.random(current_regimes.size)
     return (draws < prob_to_stress).astype(np.int8)
@@ -195,6 +217,7 @@ def regime_terminal_factors(
     n_samples: int,
     rng: np.random.Generator,
 ) -> np.ndarray:
+    """Draw terminal factors under the regime-switching model."""
     if steps_remaining <= 0:
         return np.ones((n_samples, len(spot)))
 
@@ -215,6 +238,7 @@ def regime_terminal_factors(
 
 
 def maturity_delta(spot: np.ndarray, weights: np.ndarray, strike: float) -> np.ndarray:
+    """Return the terminal basket-call delta with respect to spot levels."""
     basket_level = float(weights @ spot)
     if basket_level > strike:
         return weights.copy()
@@ -232,6 +256,7 @@ def price_and_delta_from_terminal_factors(
     tau: float,
     bump_fraction: float,
 ) -> tuple[float, np.ndarray]:
+    """Estimate price and delta from one shared Monte Carlo draw set."""
     terminal_prices = terminal_factors * spot
     discount = np.exp(-rate * tau)
     payoff = basket_call_payoff(terminal_prices, weights, strike)
@@ -269,6 +294,7 @@ def constant_model_price_and_delta(
     bump_fraction: float,
     rng: np.random.Generator,
 ) -> tuple[float, np.ndarray]:
+    """Price and delta the basket call under constant correlation."""
     if tau <= 0.0:
         payoff = float(basket_call_payoff(spot[None, :], weights, strike)[0])
         return payoff, maturity_delta(spot, weights, strike)
@@ -302,6 +328,7 @@ def regime_model_price_and_delta(
     bump_fraction: float,
     rng: np.random.Generator,
 ) -> tuple[float, np.ndarray]:
+    """Price and delta the basket call conditional on the current regime."""
     tau = steps_remaining * hedge_dt
     if steps_remaining <= 0:
         payoff = float(basket_call_payoff(spot[None, :], weights, strike)[0])
@@ -328,6 +355,7 @@ def initial_hedge_from_model(
     pricing_inputs: dict[str, Any],
     base_seed: int,
 ) -> tuple[float, np.ndarray]:
+    """Compute the time-0 hedge used to seed a backtest."""
     if hedge_model == "constant":
         return constant_model_price_and_delta(
             spot=pricing_inputs["spot"],
@@ -364,6 +392,7 @@ def initial_hedge_from_model(
 
 
 def pnl_summary(pnl: np.ndarray) -> dict[str, float]:
+    """Return the risk statistics reported throughout the notebooks."""
     return {
         "mean_pnl": float(np.mean(pnl)),
         "std_pnl": float(np.std(pnl, ddof=1)),
@@ -385,10 +414,13 @@ def evaluate_hedger(
     oracle_regime: bool = True,
     precomputed_initial: tuple[float, np.ndarray] | None = None,
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray]:
+    """Run a self-financing hedge under the constant or oracle regime model."""
     time_start = time.perf_counter()
     if precomputed_initial is None:
         model_price, initial_delta = initial_hedge_from_model(hedge_model, pricing_inputs, base_seed)
     else:
+        # Reuse a precomputed initial hedge so the reported time-0 position and
+        # the actual backtest are identical.
         model_price, initial_delta = precomputed_initial
     effective_funding_price = model_price if funding_price is None else funding_price
 
@@ -421,6 +453,8 @@ def evaluate_hedger(
                     rng=state_rng,
                 )
             else:
+                # The regime hedge in the synthetic notebooks is an oracle
+                # benchmark: it sees the simulated state at rebalance.
                 current_regime = int(true_regimes[path_idx, step + 1]) if oracle_regime else pricing_inputs["start_regime"]
                 _, state_delta = regime_model_price_and_delta(
                     spot=next_spots[path_idx],
@@ -463,6 +497,7 @@ def unhedged_short_pnl(
     maturity: float,
     funding_price: float,
 ) -> np.ndarray:
+    """Terminal P&L of the unhedged short option financed at the risk-free rate."""
     return funding_price * np.exp(rate * maturity) - terminal_payoff
 
 
@@ -473,10 +508,12 @@ def adjust_pnl_to_common_premium(
     rate: float,
     maturity: float,
 ) -> np.ndarray:
+    """Put two hedgers on a common premium basis before comparing P&L."""
     return pnl - (from_price - to_price) * np.exp(rate * maturity)
 
 
 def summary_frame_from_results(results: dict[str, dict[str, float]]) -> pd.DataFrame:
+    """Convert a results dictionary into the common notebook table format."""
     frame = pd.DataFrame(results).T
     frame.index.name = "strategy"
     return frame.reset_index()

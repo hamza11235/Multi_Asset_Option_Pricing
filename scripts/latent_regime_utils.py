@@ -1,3 +1,10 @@
+"""Utilities for the latent-regime filtered hedging follow-up.
+
+This module adds the hidden-state layer missing from the oracle synthetic
+benchmark. The true world still evolves under calm/stress correlation regimes,
+but the hedger must infer the current state from observed multivariate returns.
+"""
+
 from __future__ import annotations
 
 import time
@@ -21,6 +28,7 @@ from synthetic_analysis_utils import (
 def gaussian_logpdf_rows(
     values: np.ndarray, mean: np.ndarray, covariance: np.ndarray
 ) -> np.ndarray:
+    """Evaluate a Gaussian log-density row-by-row for a batch of observations."""
     centered = values - mean
     sign, logdet = np.linalg.slogdet(covariance)
     if sign <= 0:
@@ -38,6 +46,7 @@ def state_log_return_moments(
     corr: np.ndarray,
     hedge_dt: float,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Return the conditional log-return mean and covariance for one regime."""
     mean = (rate - div_yield - 0.5 * vol**2) * hedge_dt
     covariance = np.diag(vol) @ corr @ np.diag(vol) * hedge_dt
     return mean, covariance
@@ -54,6 +63,13 @@ def filtered_stress_probabilities(
     initial_stress_probability: float,
     hedge_dt: float,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Filter calm/stress probabilities from realized multivariate returns.
+
+    The returned arrays contain:
+
+    - the one-step-ahead stress prior used before seeing the next return vector
+    - the posterior stress probability after incorporating that return vector
+    """
     n_paths, n_time_points, n_assets = true_paths.shape
     hedge_steps = n_time_points - 1
     log_returns = np.log(true_paths[:, 1:, :] / true_paths[:, :-1, :])
@@ -78,6 +94,9 @@ def filtered_stress_probabilities(
     for step in range(hedge_steps):
         priors[:, step] = current_prior[:, 1]
 
+        # The only regime signal comes from the joint return pattern, not from
+        # distinct single-name vol regimes, so the likelihood update uses the
+        # full multivariate Gaussian log-density under calm and stress.
         log_like_calm = gaussian_logpdf_rows(log_returns[:, step, :], mean_calm, cov_calm)
         log_like_stress = gaussian_logpdf_rows(
             log_returns[:, step, :], mean_stress, cov_stress
@@ -109,6 +128,7 @@ def filtered_model_price_and_delta(
     bump_fraction: float,
     base_seed: int,
 ) -> tuple[float, np.ndarray]:
+    """Price and delta the basket call using the posterior stress probability."""
     stress_probability = float(np.clip(stress_probability, 0.0, 1.0))
     if stress_probability <= 0.0:
         return regime_model_price_and_delta(
@@ -196,6 +216,7 @@ def evaluate_filtered_hedger(
     base_seed: int,
     funding_price: float | None = None,
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray]:
+    """Run the implementable filtered hedge using posterior stress probabilities."""
     time_start = time.perf_counter()
     initial_probability = float(filtered_stress_priors[0, 0])
     model_price, initial_delta = filtered_model_price_and_delta(
@@ -224,6 +245,8 @@ def evaluate_filtered_hedger(
         new_deltas = np.empty_like(delta_holdings)
 
         for path_idx in range(n_paths):
+            # Each path gets its own posterior-weighted delta because filtering
+            # is path-dependent once returns have been observed.
             _, state_delta = filtered_model_price_and_delta(
                 stress_probability=float(filtered_stress_priors[path_idx, step + 1]),
                 spot=next_spots[path_idx],
@@ -258,6 +281,7 @@ def evaluate_filtered_hedger(
 def filter_diagnostics(
     filtered_stress_priors: np.ndarray, true_regimes: np.ndarray
 ) -> dict[str, float]:
+    """Summarize how informative the filtered stress probabilities are."""
     prior = filtered_stress_priors.reshape(-1)
     truth = true_regimes.reshape(-1).astype(float)
     hard_pred = (prior >= 0.5).astype(float)
@@ -277,6 +301,7 @@ def scenario_results(
     pricing_inputs: dict[str, Any],
     base_seed: int,
 ) -> tuple[dict[str, dict[str, float]], dict[str, np.ndarray], dict[str, np.ndarray]]:
+    """Evaluate constant, oracle, and filtered hedgers on the same true-world paths."""
     oracle_initial = regime_model_price_and_delta(
         spot=pricing_inputs["spot"],
         steps_remaining=pricing_inputs["hedge_steps"],
@@ -317,6 +342,8 @@ def scenario_results(
         rng=np.random.default_rng(base_seed + 3),
     )
 
+    # Use the oracle time-0 premium as the common funding basis so the
+    # downstream comparison isolates hedge quality rather than pricing spreads.
     funding_price = float(oracle_initial[0])
     unhedged_pnl = unhedged_short_pnl(
         terminal_payoff=np.maximum(

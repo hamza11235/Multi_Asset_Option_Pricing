@@ -1,3 +1,9 @@
+"""Generate the final latent-regime follow-up notebook.
+
+The tracked notebook is committed directly, but this script remains in the repo
+so the submission notebook can be regenerated deterministically if needed.
+"""
+
 from __future__ import annotations
 
 import json
@@ -5,13 +11,8 @@ from pathlib import Path
 from textwrap import dedent
 
 
-ROOT = Path("/Users/hamzaahmed/Multi-Asset Option Pricing")
-NOTEBOOK_PATH = (
-    ROOT
-    / "latent_regime_followup"
-    / "notebooks"
-    / "01_filtered_regime_hedging.ipynb"
-)
+ROOT = Path(__file__).resolve().parents[1]
+NOTEBOOK_PATH = ROOT / "notebooks" / "05_filtered_regime_hedging.ipynb"
 
 
 def md_cell(source: str) -> dict:
@@ -35,11 +36,13 @@ def code_cell(source: str) -> dict:
 cells = [
     md_cell(
         """
-        # Latent Regime Follow-Up - Filtered Hedging
+        # 05 - Latent Regime Follow-Up
 
-        This notebook extends the synthetic hedging study by making the regime **latent**.
+        This notebook is the final project extension. The true world still evolves under calm and stress correlation regimes, but the hedger no longer observes the regime directly.
 
-        The true world still switches between calm and stress correlation regimes, but the hedger no longer observes the true state directly. Instead, it only sees past multivariate returns and updates a posterior stress probability through a hidden Markov filter.
+        Instead, the hedger only sees past multivariate returns and filters a posterior stress probability through a two-state hidden Markov update.
+
+        **Objective.** Measure how much of the oracle regime-hedge advantage survives once the regime becomes latent rather than observed.
 
         We compare four positions:
 
@@ -48,9 +51,7 @@ cells = [
         - oracle regime hedge
         - filtered regime hedge
 
-        The filtered hedge answers the practical question the original synthetic notebook could not:
-
-        **How much of the oracle regime-hedge advantage survives when the state is hidden rather than observed?**
+        The oracle hedge is an upper benchmark. The filtered hedge is the implementable regime-aware strategy.
         """
     ),
     code_cell(
@@ -82,8 +83,8 @@ cells = [
 
 
         PROJECT_ROOT = find_project_root()
-        FOLLOWUP_DIR = PROJECT_ROOT / "latent_regime_followup"
-        DATA_DIR = FOLLOWUP_DIR / "data"
+        DATA_DIR = PROJECT_ROOT / "outputs" / "latent_regime"
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
         from synthetic_analysis_utils import (
