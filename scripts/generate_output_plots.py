@@ -72,12 +72,27 @@ def main() -> None:
     fig.savefig(output_dir / "synthetic_baseline_summary.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+    fig, axes = plt.subplots(1, 4, figsize=(19, 4.5))
     for axis, metric, title, ylabel in zip(
         axes,
-        ["regime_price_minus_constant", "std_gap_constant_minus_regime", "q05_gap_regime_minus_constant"],
-        ["Regime price premium vs N", "Dispersion gap vs N", "5% tail gap vs N"],
-        ["Regime minus constant", "Constant minus regime", "Regime minus constant"],
+        [
+            "regime_price_minus_constant",
+            "std_gap_constant_minus_regime",
+            "q05_gap_regime_minus_constant",
+            "q01_gap_regime_minus_constant",
+        ],
+        [
+            "Regime price premium vs N",
+            "Dispersion gap vs N",
+            "5% tail gap vs N",
+            "1% tail gap vs N",
+        ],
+        [
+            "Regime minus constant",
+            "Constant minus regime",
+            "Regime minus constant",
+            "Regime minus constant",
+        ],
     ):
         axis.plot(dimension["n_assets"], dimension[metric], marker="o", linewidth=2.0)
         axis.axhline(0.0, color="black", linestyle="--", linewidth=1.0)
