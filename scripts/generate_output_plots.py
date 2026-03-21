@@ -41,6 +41,7 @@ def main() -> None:
     baseline = pd.read_csv(synthetic_dir / "baseline_hedging_summary_clean.csv")
     dimension = pd.read_csv(synthetic_dir / "dimension_homogeneous_gap_clean.csv")
     stress_share = pd.read_csv(synthetic_dir / "n10_parameter_gap_clean.csv")
+    structural_stress = pd.read_csv(synthetic_dir / "structural_stress_gap_clean.csv")
     latent = pd.read_csv(latent_dir / "latent_filtered_hedging_summary.csv")
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -103,6 +104,22 @@ def main() -> None:
     fig.savefig(output_dir / "synthetic_dimension_summary.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
+    fig, ax = plt.subplots(figsize=(6.4, 4.5))
+    ax.plot(
+        dimension["n_assets"],
+        dimension["q01_gap_regime_minus_constant"],
+        marker="o",
+        linewidth=2.0,
+        color="tab:red",
+    )
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0)
+    ax.set_title("Dimension study: clean 1% tail gap")
+    ax.set_xlabel("Number of assets")
+    ax.set_ylabel("1% tail gap: regime minus constant")
+    fig.tight_layout()
+    fig.savefig(output_dir / "synthetic_dimension_q01_gap.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
     stress_plot = stress_share.loc[stress_share["scenario_group"] == "stress_share"].copy()
     stress_plot["scenario_value"] = stress_plot["scenario_value"].astype(float)
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -119,6 +136,25 @@ def main() -> None:
         axis.set_ylabel(ylabel)
     fig.tight_layout()
     fig.savefig(output_dir / "synthetic_stress_share_summary.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.8))
+    for lambda_daily, frame in structural_stress.groupby("lambda_daily"):
+        ordered = frame.sort_values("days_per_hedge_step")
+        ax.plot(
+            ordered["days_per_hedge_step"],
+            ordered["q01_gap_regime_minus_constant"],
+            marker="o",
+            linewidth=2.0,
+            label=f"lambda={lambda_daily:.2f}",
+        )
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0)
+    ax.set_title("Structural stress: clean 1% tail gap")
+    ax.set_xlabel("Days per hedge step")
+    ax.set_ylabel("1% tail gap: regime minus constant")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_dir / "synthetic_structural_stress_q01_gap.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
     latent_plot = latent.loc[latent["strategy"] != "Unhedged short option"].copy()
